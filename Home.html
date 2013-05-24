@@ -21,6 +21,13 @@
 
         $(function () {
             function GetMyEquipment() {
+                $.mobile.loading('show', {
+                    text: "",
+                    textvisible: false,
+                    theme: "a",
+                    textonly: false,
+                    html: ""
+                });
                 $.ajax({
                     type: 'get',
                     dataType: 'json',
@@ -31,7 +38,10 @@
                         var sb = new StringBuffer();
                         sb.append("<ul data-role='listview'>");
                         $.each(data, function (i, item) {
-                            sb.append("<li><a helf='#equipmentTrans' id=" + item.UserID + " class='myequlist' helf='#equipmentTrans'><h2>" + item.UserName + "</h2><p>数量： " + item.FirstName + "</p></a></li>");
+                            sb.append("<li><a href='#equipmentTrans' id=" + item.UserID
+                                + " class='myequlist' helf='#equipmentTrans'><h2>"
+                                + item.UserName + "</h2><p>数量： " + item.FirstName
+                                + "</p></a></li>");
                         });
                         sb.append("</ul>");
                         $("#div_equipmentList").html(sb.toString());
@@ -47,20 +57,25 @@
                             eq_name = target.find("h2").html();
                             qu = target.find("p").html();
                             $("#equ_Deta_header").html(eq_name);
+                            $("#allQuantity").html(qu);
+                            $("#hid_equipID").val(eq_id);
                         });
+                        $.mobile.loading("hide");
                     }
                 });
             }
-
-            $("#a_MyEquipment").click(function (event) {
+            
+            $("#page_MyEquip").on("pageshow", function (event, data) {
                 GetMyEquipment();
             });
 
-            $("#a_EquipmentTransBack").click(function (event) {
-                GetMyEquipment();
+            $("#page_MyEquip").on("pagehide", function (event, data) {
+                $("#div_equipmentList").html("");
             });
 
-            $(".myequlist").click(function (event) {
+            $("#btn_trans").click(function (event) {
+                $("#comf_message").html("转交快挂*2给西西?")
+                $.mobile.changePage("#ConfirmTrans", { role: "dialog" });
             });
         })
     </script>
@@ -72,16 +87,17 @@
         </div>
         <div data-role="content">
             <ul data-role="listview">
-                <li><a id="a_MyEquipment" href="#page1">我的装备</a></li>
+                <li><a id="a_MyEquipment" href="#page_MyEquip">我的装备</a></li>
                 <li><a href="#">我的转交</a></li>
                 <li><a href="#">我的确认</a></li>
             </ul>
         </div>
         <!--<div data-role="footer" data-position="fixed"><h3>Footer</h3></div>-->
     </div>
-    <div data-role="page" data-theme="b" id="page1">
+    <div data-role="page" data-theme="b" id="page_MyEquip">
         <div data-role="header" data-position="fixed">
-            <a href="#homePage">Back</a><h3>我的装备</h3>
+            <a href="#homePage">Back</a>
+            <h3>我的装备</h3>
         </div>
         <div data-role="content" id="div_equipmentList">
         </div>
@@ -89,16 +105,31 @@
     </div>
     <div data-role="page" data-theme="b" id="equipmentTrans">
         <div data-role="header" data-position="fixed">
-            <a href="#page1" id="a_EquipmentTransBack">Back</a><h3 id="equ_Deta_header"></h3>
+            <a href="#page_MyEquip" id="a_EquipmentTransBack">Back</a>
+            <h3 id="equ_Deta_header"></h3>
+            <a href="home.html" data-role="button" data-icon="home">Home</a>
         </div>
         <div data-role="content">
+            <input type="hidden" id="hid_equipID" value="0" />
             <select>
                 <option id="7">逛山</option>
                 <option id="9">骨拉</option>
             </select>
-            <label>数量</label>
-            <input type="text" />
-            <button>转交</button>
+            <label id="allQuantity">数量</label>
+            <input type="text" id="transEquipQuantity" />
+            <a id="btn_trans" data-role="button"
+                data-rel="dialog" data-transition="pop">转交</a>
+        </div>
+    </div>
+
+    <div data-role="dialog" id="ConfirmTrans">
+        <div data-role="header" data-theme="d">
+            <h1>转交</h1>
+        </div>
+        <div data-role="content" data-theme="c">
+            <h1 id="comf_message"></h1>
+            <input type="button" data-theme="b" id="soundgood" value="确认" />
+            <a href="#equipmentTrans" data-role="button" data-rel="back" data-theme="c" id="soundbad">取消</a>
         </div>
     </div>
 </body>
