@@ -45,6 +45,13 @@ var app = {
         receivedElement.setAttribute('style', 'display:block;');
 
         console.log('Received Event: ' + id);
-        
+        navigator.notification.alert(
+                                     'Cordova is ready!',       // message
+                                     function() {//do something
+                                        location.href = "Home.html";
+                                     },  // callback
+                                     'Congratulations',            // title
+                                     'Done'                      // buttonName
+                                     );
     }
 };

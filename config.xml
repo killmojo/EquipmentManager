@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<widget xmlns = "http://www.w3.org/ns/widgets"
+    xmlns:gap = "http://phonegap.com/ns/1.0"
+    id        = "com.lspandeng.EquipmentManager"
+    version   = "1.0.0">
+
+<preference name="phonegap-version" value="2.7.0" />
+
+<name>装备系统</name>
+
+<description>
+A simple PhoneGap Build application.
+</description>
+
+<author href="http://www.lspandeng.com" email="kill.mojo@yahoo.com">
+Kill Mojo
+</author>
+
+</widget>
