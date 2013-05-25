@@ -28,34 +28,42 @@
                     textonly: false,
                     html: ""
                 });
+                storagedUserKey = window.localStorage.getItem("UserKey");
                 $.ajax({
                     type: 'get',
                     dataType: 'json',
-                    url: "http://localhost/phpserver/selectuser.php",
+                    url: "http://localhost/phpserver/selectuser.php?userKey=" + storagedUserKey,
                     contentType: 'application/json',
                     data: [],
                     success: function (data) {
                         var sb = new StringBuffer();
-                        sb.append("<ul data-role='listview'>");
+                        sb.append("<ul id='myequipList' data-role='listview' data-filter='true' data-theme='d' data-divider-theme='b'>");
                         $.each(data, function (i, item) {
-                            sb.append("<li><a href='#equipmentTrans' id=" + item.UserID
-                                + " class='myequlist' helf='#equipmentTrans'><h2>"
-                                + item.UserName + "</h2><p>数量： " + item.FirstName
-                                + "</p></a></li>");
+                            sb.append("<li dearpt=" + item.DepartmentName + "> "
+                                + "<a class='myequlist' href='#equipmentTrans' id=" + item.UserID + " >"
+                                + "<h2>" + item.UserName + "</h2>"
+                                + "<span class='ui-li-count'>数量： " + item.FirstName + "</span>"
+                                + "</a></li>");
                         });
                         sb.append("</ul>");
                         $("#div_equipmentList").html(sb.toString());
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        alert("Error");
                     },
                     complete: function () {
-                        $("div[data-role=content] ul").listview();
+                        //$("#myequipList").listview();
+                        $("#myequipList").listview({
+                            autodividers: true,
+                            autodividersSelector: function (li) {
+                                var out = li.attr('dearpt');
+                                return out;
+                            }
+                        }).listview("refresh");
                         $(".myequlist").bind('click', function () {
                             var target = $(this);
                             eq_id = target.attr("id");
                             eq_name = target.find("h2").html();
-                            qu = target.find("p").html();
+                            qu = target.find("span").html();
                             $("#equ_Deta_header").html(eq_name);
                             $("#allQuantity").html(qu);
                             $("#hid_equipID").val(eq_id);
@@ -64,32 +72,92 @@
                     }
                 });
             }
-            
-            $("#page_MyEquip").on("pageshow", function (event, data) {
+
+            $("#btn_confirmUserKey").click(function (event) {
+                if ($("#userKey").val() == "123456") {
+                    window.localStorage.setItem("UserKey", $("#userKey").val());
+                    $.mobile.changePage("#homePage", { role: "page" });
+                }
+                else {
+                    $("#messages").html("无效Key！");
+                    $.mobile.changePage("#Message", { role: "dialog" });
+                }
+            });
+
+            $("#logonImage").click(function (event) {
+                storagedUserKey = window.localStorage.getItem("UserKey");
+                if (storagedUserKey != null) {
+                    $.mobile.changePage("#homePage", { role: "page" });
+                }
+                else {
+                    $.mobile.changePage("#ConfirmKey", { role: "page" });
+                }
+
+            });
+
+            $("#ConfirmKey").on("pagehide", function (event) {
+                $("#userKey").val("");
+            });
+
+            //$("#page_MyEquip").on("pageshow", function (event, data) {
+            //    GetMyEquipment();
+            //});
+
+            //$("#page_MyEquip").on("pagehide", function (event, data) {
+            //    $("#div_equipmentList").html("");
+            //});
+
+            $("#a_MyEquipment").click(function (event) {
                 GetMyEquipment();
             });
 
-            $("#page_MyEquip").on("pagehide", function (event, data) {
-                $("#div_equipmentList").html("");
+            $("#btn_trans").click(function (event) {
+                $("#comf_message").html("转交快挂*2给西西?");
+                $.mobile.changePage("#ConfirmTrans", { role: "dialog" });
             });
 
-            $("#btn_trans").click(function (event) {
-                $("#comf_message").html("转交快挂*2给西西?")
-                $.mobile.changePage("#ConfirmTrans", { role: "dialog" });
+            $("#logoff").click(function (event) {
+                window.localStorage.removeItem("UserKey");
+                $.mobile.changePage("#ConfirmKey", { role: "page" });
+            });
+
+            $("#refreshMyEquip").click(function (event) {
+                GetMyEquipment();
+            });
+
+            $("#soundgood").click(function (event) {
+                $.mobile.changePage("#page_MyEquip", { role: "page" });
+                GetMyEquipment();
+                $("#messages").html("转交成功！");
+                $.mobile.changePage("#Message", { role: "dialog" });
             });
         })
     </script>
 </head>
 <body>
+    <div data-role="page" data-theme="b" id="Welcome">
+        <div data-role="content">
+            <h1>Touch to logon</h1>
+            <img id="logonImage" src="img/logo.png" />
+        </div>
+    </div>
+    <div data-role="page" data-theme="b" id="ConfirmKey">
+        <div data-role="content">
+            <p>第一次登陆请输入个人ID Key！</p>
+            <input id="userKey" type="password" />
+            <a id="btn_confirmUserKey" data-role="button">确认</a>
+        </div>
+    </div>
     <div data-role="page" data-theme="b" id="homePage">
         <div data-role="header" data-position="fixed">
             <h3>Home</h3>
+            <a id="logoff" data-role="button" data-icon="home">Logoff</a>
         </div>
         <div data-role="content">
             <ul data-role="listview">
                 <li><a id="a_MyEquipment" href="#page_MyEquip">我的装备</a></li>
-                <li><a href="#">我的转交</a></li>
                 <li><a href="#">我的确认</a></li>
+                <li><a href="#">我的转交</a></li>
             </ul>
         </div>
         <!--<div data-role="footer" data-position="fixed"><h3>Footer</h3></div>-->
@@ -98,6 +166,7 @@
         <div data-role="header" data-position="fixed">
             <a href="#homePage">Back</a>
             <h3>我的装备</h3>
+            <a id="refreshMyEquip" data-role="button" data-icon="refresh">刷新</a>
         </div>
         <div data-role="content" id="div_equipmentList">
         </div>
@@ -110,12 +179,12 @@
             <a href="home.html" data-role="button" data-icon="home">Home</a>
         </div>
         <div data-role="content">
+            <label id="allQuantity">数量</label>
             <input type="hidden" id="hid_equipID" value="0" />
             <select>
                 <option id="7">逛山</option>
                 <option id="9">骨拉</option>
             </select>
-            <label id="allQuantity">数量</label>
             <input type="text" id="transEquipQuantity" />
             <a id="btn_trans" data-role="button"
                 data-rel="dialog" data-transition="pop">转交</a>
@@ -130,6 +199,16 @@
             <h1 id="comf_message"></h1>
             <input type="button" data-theme="b" id="soundgood" value="确认" />
             <a href="#equipmentTrans" data-role="button" data-rel="back" data-theme="c" id="soundbad">取消</a>
+        </div>
+    </div>
+
+    <div data-role="dialog" id="Message" data-close-btn="none">
+        <div data-role="header" data-theme="d">
+            <h1>Information</h1>
+        </div>
+        <div data-role="content" data-theme="c">
+            <h1 id="messages"></h1>
+            <a data-role="button" data-rel="back" data-theme="c" id="cancelMessage">OK</a>
         </div>
     </div>
 </body>
