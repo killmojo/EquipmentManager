@@ -1,42 +1,239 @@
 ﻿<!DOCTYPE html>
-<!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="Content/jquery.mobile-1.3.0.min.css" />
+    <script type="text/javascript" charset="utf-8" src="Scripts/jquery-2.0.0.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="cordova-2.7.0.js"></script>
+    <script type="text/javascript" charset="utf-8" src="Scripts/jquery.mobile-1.3.0.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        function StringBuffer(str) {
+            var arr = [];
+            str = str || "";
+            arr.push(str);
+            this.append = function (str1) {
+                arr.push(str1);
+                return this;
+            };
+            this.toString = function () {
+                return arr.join("");
+            };
+        };
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        function CheckUserKey(userKey) {
+            var userName = "";
+            var userArray = new Array("847647-逛山", "837498-老雷", "9037521-杀手", "8476311-骆驼", "8746312-皮叔", "0948320-博弈", "8374914-狂奔", "0367416-清风", "8476317-大元", "8372524-骨拉", "9876331-西西", "0987633-左左", "0937835-梦岩", "73874100-宁武", "87639101-杨树昕");
+            userArray.forEach(function (e) {
+                var arr = e.split("-");
+                if (userKey == arr[0]) {
+                    userName = arr[1];
+                }
+            });
+            return userName;
+        }
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <title>Hello World</title>
-    </head>
-    <body>
-        <div class="app">
-            <h1>Apache Cordova</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
-            </div>
+        $(function () {
+            function GetMyEquipment() {
+                $.mobile.loading('show', {
+                    text: "",
+                    textvisible: false,
+                    theme: "a",
+                    textonly: false,
+                    html: ""
+                });
+                storagedUserKey = window.localStorage.getItem("UserKey");
+                $.ajax({
+                    type: 'get',
+                    dataType: 'json',
+                    url: "http://www.lspandeng.org/yamaidai/GetEquipmentByUserID.php?userKey=" + storagedUserKey,
+                    contentType: 'application/json',
+                    data: [],
+                    success: function (data) {
+                        var sb = new StringBuffer();
+                        sb.append("<ul id='myequipList' data-role='listview' data-filter='true' data-theme='d' data-divider-theme='b'>");
+                        $.each(data, function (i, item) {
+                            sb.append("<li dearpt=" + decodeURI(item.Fname) + "> "
+                                      + "<a class='myequlist' href='#equipmentTrans' id=" + item.UserID + " >"
+                                      + "<h2>" + decodeURI(item.zb_name) + "</h2>"
+                                      + "<span class='ui-li-count'>" + item.Num + "</span>"
+                                      + "</a></li>");
+                        });
+                        sb.append("</ul>");
+                        $("#div_equipmentList").html(sb.toString());
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    },
+                    complete: function () {
+                        //$("#myequipList").listview();
+                        $("#myequipList").listview({
+                            autodividers: true,
+                            autodividersSelector: function (li) {
+                                var out = li.attr('dearpt');
+                                return out;
+                            }
+                        }).listview("refresh");
+                        $(".myequlist").bind('click', function () {
+                            var target = $(this);
+                            eq_id = target.attr("id");
+                            eq_name = target.find("h2").html();
+                            qu = target.find("span").html();
+                            $("#equ_Deta_header").html(eq_name);
+                            $("#allQuantity").html(qu);
+                            $("#hid_equipID").val(eq_id);
+                        });
+                        $.mobile.loading("hide");
+                    }
+                });
+            }
+
+            $("#btn_confirmUserKey").click(function (event) {
+                var userName = CheckUserKey($("#userKey").val());
+                if (userName != "") {
+                    $("#h_userName").html(userName + "的装备");
+                    $("#a_MyEquipment").html(userName + "的装备");
+                    window.localStorage.setItem("UserKey", $("#userKey").val());
+                    $.mobile.changePage("#homePage", { role: "page" });
+                }
+                else {
+                    $("#messages").html("无效Key！");
+                    $.mobile.changePage("#Message", { role: "dialog" });
+                }
+            });
+
+            $("#logonImage").click(function (event) {
+                storagedUserKey = window.localStorage.getItem("UserKey");
+                if (storagedUserKey != null) {
+                    var userName = CheckUserKey(storagedUserKey);
+                    $("#h_userName").html(userName + "的装备");
+                    $("#a_MyEquipment").html(userName + "的装备");
+                    $.mobile.changePage("#homePage", { role: "page" });
+                }
+                else {
+                    $.mobile.changePage("#ConfirmKey", { role: "page" });
+                }
+
+            });
+
+            $("#ConfirmKey").on("pagehide", function (event) {
+                $("#userKey").val("");
+            });
+
+            //$("#page_MyEquip").on("pageshow", function (event, data) {
+            //    GetMyEquipment();
+            //});
+
+            //$("#page_MyEquip").on("pagehide", function (event, data) {
+            //    $("#div_equipmentList").html("");
+            //});
+
+            $("#a_MyEquipment").click(function (event) {
+                GetMyEquipment();
+            });
+
+            $("#btn_trans").click(function (event) {
+                $("#comf_message").html("转交" + $("#equ_Deta_header").html() + "*" + $("#allQuantity").html()
+                    + "给" + $("#userSelect").val() + "?");
+                $.mobile.changePage("#ConfirmTrans", { role: "dialog" });
+            });
+
+            $("#logoff").click(function (event) {
+                window.localStorage.removeItem("UserKey");
+                $.mobile.changePage("#ConfirmKey", { role: "page" });
+            });
+
+            $("#refreshMyEquip").click(function (event) {
+                GetMyEquipment();
+            });
+
+            $("#soundgood").click(function (event) {
+                $.mobile.changePage("#page_MyEquip", { role: "page" });
+                GetMyEquipment();
+                $("#messages").html("转交成功！");
+                $.mobile.changePage("#Message", { role: "dialog" });
+            });
+        })
+    </script>
+</head>
+<body>
+    <div data-role="page" data-theme="b" id="Welcome">
+        <div data-role="content">
+            <h1>Touch to logon</h1>
+            <img id="logonImage" src="img/logo.png" />
         </div>
-        <script type="text/javascript" src="cordova.ios.js"></script>
-        <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript">
-            app.initialize();
-        </script>
-    </body>
+    </div>
+    <div data-role="page" data-theme="b" id="ConfirmKey">
+        <div data-role="content">
+            <p>第一次登陆请输入个人ID Key！</p>
+            <input id="userKey" type="password" />
+            <a id="btn_confirmUserKey" data-role="button">确认</a>
+        </div>
+    </div>
+    <div data-role="page" data-theme="b" id="homePage">
+        <div data-role="header" data-position="fixed">
+            <h3>Home</h3>
+            <a id="logoff" data-role="button" data-icon="home">Logoff</a>
+        </div>
+        <div data-role="content">
+            <ul data-role="listview">
+                <li><a id="a_MyEquipment" href="#page_MyEquip">我的装备</a></li>
+                <li><a href="#">我的确认</a></li>
+                <li><a href="#">我的转交</a></li>
+            </ul>
+        </div>
+        <!--<div data-role="footer" data-position="fixed"><h3>Footer</h3></div>-->
+    </div>
+    <div data-role="page" data-theme="b" id="page_MyEquip">
+        <div data-role="header" data-position="fixed">
+            <a href="#homePage">Back</a>
+            <h3 id="h_userName">我的装备</h3>
+            <a id="refreshMyEquip" data-role="button" data-icon="refresh">刷新</a>
+        </div>
+        <div data-role="content" id="div_equipmentList">
+        </div>
+        <!--<div data-role="footer"><h3>Footer</h3></div>-->
+    </div>
+    <div data-role="page" data-theme="b" id="equipmentTrans">
+        <div data-role="header" data-position="fixed">
+            <a href="#page_MyEquip" id="a_EquipmentTransBack">Back</a>
+            <h3 id="equ_Deta_header"></h3>
+            <a href="home.html" data-role="button" data-icon="home">Home</a>
+        </div>
+        <div data-role="content">
+            <label id="allQuantity">数量</label>
+            <input type="hidden" id="hid_equipID" value="0" />
+            <select id="userSelect">
+                <option id="7">逛山</option>
+                <option id="9">骨拉</option>
+                <option id="23">老雷</option>
+                <option id="3">杀手</option>
+                <option id="233">骆驼</option>
+                <option id="234">皮叔</option>
+            </select>
+            <input type="text" id="transEquipQuantity" />
+            <a id="btn_trans" data-role="button"
+                data-rel="dialog" data-transition="pop">转交</a>
+        </div>
+    </div>
+
+    <div data-role="dialog" id="ConfirmTrans">
+        <div data-role="header" data-theme="d">
+            <h1>转交</h1>
+        </div>
+        <div data-role="content" data-theme="c">
+            <h3 id="comf_message"></h3>
+            <input type="button" data-theme="b" id="soundgood" value="确认" />
+            <a href="#equipmentTrans" data-role="button" data-rel="back" data-theme="c" id="soundbad">取消</a>
+        </div>
+    </div>
+
+    <div data-role="dialog" id="Message" data-close-btn="none">
+        <div data-role="header" data-theme="d">
+            <h1>Information</h1>
+        </div>
+        <div data-role="content" data-theme="c">
+            <h3 id="messages"></h3>
+            <a data-role="button" data-rel="back" data-theme="c" id="cancelMessage">OK</a>
+        </div>
+    </div>
+</body>
 </html>
